@@ -1,1 +1,3 @@
 .idea/
+# датасет из kaggle
+data/words_freq.csv

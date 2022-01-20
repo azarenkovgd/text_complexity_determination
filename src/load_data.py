@@ -1,14 +1,16 @@
 import pathlib
 
 
-# для обработки текст нужно поместить в папку data (предварительно ее создав)
-PROJECT_ROOT = pathlib.Path(__file__).parent.parent
-DATA_FOLDER = PROJECT_ROOT / 'data'
-
-
 def load_txt_to_list_of_lines(path: pathlib.Path):
     with open(path) as f:
         lines = f.readlines()
 
-    # убираем пробелы, переносы строк
-    return list(map(lambda string: string.strip(), lines))
+    cleaned_lines = []
+    for line in lines:
+        # убираем лишние пробелы, табуляцию и переносы строк, приводим к нижнему регистру - это универсальное действие
+        line = line.strip()
+        # пустые строки бесполезны в нашем сценарии, так что их можно смело выкидывать
+        if line != '':
+            cleaned_lines.append(line)
+
+    return cleaned_lines

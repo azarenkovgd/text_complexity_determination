@@ -7,24 +7,19 @@ import pandas as pd
 from nltk.corpus import stopwords
 from sklearn import neighbors
 
-from src.configs import KAGGLE_DATASET_LOCATION, ENGLISH_LVLS, WORDS_WITH_LVLS_FOLDER, C_SONG_LOCATION, B_SONG_LOCATION, \
-    A_SONG_LOCATION
+from src.configs import KAGGLE_DATASET_LOCATION, ENGLISH_LVLS, WORDS_WITH_LVLS_FOLDER
 from src.load_data import load_txt_to_list_of_lines
 
 
-def load_preprocess_song_words(song_location: pathlib.Path):
-    lines = load_txt_to_list_of_lines(song_location)
-
-    text = ' '.join(lines)
-    text = re.sub(fr'[{string.punctuation}]', '', text)
-    words = text.split()
+def get_song_words(song_text: str):
+    words = song_text.split()
 
     # приводим слова к "базовой" форме
     wnl = nltk.stem.WordNetLemmatizer()
     words = map(lambda word: wnl.lemmatize(word), words)
 
     # оставляем только валидные английские слова
-    text_vocab = set(word.lower() for word in words if word.isalpha())
+    text_vocab = set(word for word in words if word.isalpha())
     english_vocab = set(word.lower() for word in nltk.corpus.words.words())
     valid_words = text_vocab & english_vocab
 
@@ -68,7 +63,7 @@ def create_count_column(df_to_update: pd.DataFrame, kaggle_dataset: pd.DataFrame
     df_to_update['count'] = kaggle_dataset.loc[df_to_update.index]['count']
 
 
-def get_estimation_using_words(song_location: pathlib.Path):
+def get_words_based_estimation(song_text: str) -> str:
     kaggle_dataset = pd.read_csv(KAGGLE_DATASET_LOCATION, index_col=0, header=0)
 
     # подгружаем вручную размеченный датасет
@@ -83,7 +78,8 @@ def get_estimation_using_words(song_location: pathlib.Path):
     classifier = neighbors.KNeighborsClassifier(15)
     classifier.fit(x, y)
 
-    song_words = load_preprocess_song_words(song_location)
+    # подгружаем и обрабатываем трек
+    song_words = get_song_words(song_text)
     create_count_column(song_words, kaggle_dataset)
 
     song_words['lvl'] = classifier.predict(song_words)
